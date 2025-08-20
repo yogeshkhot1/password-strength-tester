@@ -292,7 +292,12 @@ function showModified(){
   }
 }
 
-/* 🚫 No spaces allowed */
+/* 🚫 Windows: Block spacebar typing */
+pw.addEventListener("keydown", (e) => {
+  if (e.key === " ") e.preventDefault();
+});
+
+/* 🚫 Android/iOS & Paste: Auto-remove spaces */
 pw.addEventListener('input', () => {
   pw.value = pw.value.replace(/\s+/g, ""); 
   update();
