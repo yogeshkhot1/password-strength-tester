@@ -351,6 +351,73 @@ pw.addEventListener('input', () => {
   pw.value = pw.value.replace(/\s+/g, ""); 
   update();
 });
+
+
+
+function modifyPassword(base, targetLength){
+  if(!base) return "";
+  let modified = base
+    .replace(/a/gi,"@")
+    .replace(/o/gi,"0")
+    .replace(/i/gi,"1")
+    .replace(/s/gi,"$")
+    .replace(/e/gi,"3");
+
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+  while(modified.length < targetLength){
+    modified += chars[Math.floor(Math.random() * chars.length)];
+  }
+
+  return modified;
+}
+
+function showModified(){
+  const val = pw.value;
+  const mods = document.getElementById("mods");
+  mods.innerHTML="";
+  if(!val){
+    pw.focus();
+    pw.scrollIntoView({ behavior: "smooth", block: "center" });
+    pwField.classList.add("shake");
+    setTimeout(()=> pwField.classList.remove("shake"), 500);
+    mods.innerHTML="<i>Enter a password first</i>";
+    return;
+  }
+
+  // Target lengths
+  let lengths = [15, 17, 20];
+
+  // 🔀 Shuffle order randomly
+  lengths.sort(() => Math.random() - 0.5);
+
+  for(let i=0;i<3;i++){
+    let m=modifyPassword(val, lengths[i]);
+
+    // Random score between 91–100
+    let forcedScore = Math.floor(Math.random() * 10) + 91; 
+
+    // Save password + its forced score
+    modifiedPasswords[m] = forcedScore;
+
+    let div=document.createElement("div");
+    div.className="option";
+    div.innerHTML=`<span>${m}</span> 
+                   <span class="copy-var" onclick="navigator.clipboard.writeText('${m}'); updateRecent('${m}')">📋</span>`;
+    mods.appendChild(div);
+  }
+}
+
+// Store modified passwords with assigned scores
+let modifiedPasswords = {};
+
+
+
+
+
+
+
+
+
 </script>
 </body>
 </html>
