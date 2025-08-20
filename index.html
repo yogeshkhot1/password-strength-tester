@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title> Password Analyzer</title>
+  <title>Password Strength Tester</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
     body{
@@ -132,6 +131,16 @@
     .copy-var{cursor:pointer;}
     .copy-var:hover{text-shadow:0 0 8px #0f0;}
 
+    /* Shake animation */
+    .shake {
+      animation: shakeAnim 0.4s;
+    }
+    @keyframes shakeAnim {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+
     /* Footer */
     .footer{
       margin-top:30px;
@@ -148,7 +157,7 @@
       text-shadow:0 0 12px #00ff6a;
     }
     .heart{
-      color:#ff0040;  /* neon pink/red glow */
+      color:#ff0040;
       text-shadow:0 0 8px #ff0040, 0 0 16px #ff0040, 0 0 24px #ff0040;
       animation: beat 1.2s infinite;
     }
@@ -159,10 +168,10 @@
   </style>
 </head>
 <body>
-  <h1> Password Strength Tester </h1>
+  <h1>Password Strength Tester</h1>
 
   <!-- Input -->
-  <div class="field">
+  <div class="field" id="pwField">
     <input id="pw" type="password" placeholder="> Enter password..." />
     <span id="togglePw" class="toggle-btn">👁</span>
     <span id="copyPw" class="copy-btn">📋</span>
@@ -178,7 +187,7 @@
     <div class="bar"><span id="barFill"></span></div>
   </div>
 
-  <!-- New Modifier Section -->
+  <!-- Modifier Section -->
   <div class="modifier">
     <h2>🔄 Modified Your Password</h2>
     <button class="btn-generate" onclick="showModified()">⚡ Generate Variations</button>
@@ -193,7 +202,7 @@
 
   <div class="disclaimer">
     ⚠️ Disclaimer: This is a static web application for password generation. Passwords entered here are <b>never stored</b> or <b>exposed.</b><br>
-    Everything runs securely in your browser only. <b>Don't forgot your password.</b>
+    Everything runs securely in your browser only. <b>Don't forget your password.</b>
   </div>
 
   <!-- Footer -->
@@ -203,6 +212,7 @@
 
 <script>
 const pw = document.getElementById('pw');
+const pwField = document.getElementById('pwField');
 const scoreNum = document.getElementById('scoreNum');
 const label = document.getElementById('label');
 const tip = document.getElementById('tip');
@@ -216,8 +226,8 @@ let recentPasswords = [];
 
 function updateRecent(pwd){
   if(!pwd) return;
-  recentPasswords.unshift(pwd); // add to start
-  if(recentPasswords.length > 5) recentPasswords.pop(); // keep last 5
+  recentPasswords.unshift(pwd);
+  if(recentPasswords.length > 5) recentPasswords.pop();
   recentList.innerHTML = "";
   recentPasswords.forEach(p=>{
     let div=document.createElement("div");
@@ -313,7 +323,15 @@ function showModified(){
   const val = pw.value;
   const mods = document.getElementById("mods");
   mods.innerHTML="";
-  if(!val){mods.innerHTML="<i>Enter a password first</i>";return;}
+  if(!val){
+    // Focus + scroll + shake gesture
+    pw.focus();
+    pw.scrollIntoView({ behavior: "smooth", block: "center" });
+    pwField.classList.add("shake");
+    setTimeout(()=> pwField.classList.remove("shake"), 500);
+    mods.innerHTML="<i>Enter a password first</i>";
+    return;
+  }
   for(let i=0;i<3;i++){
     let m=modifyPassword(val);
     let div=document.createElement("div");
@@ -336,6 +354,3 @@ pw.addEventListener('input', () => {
 </script>
 </body>
 </html>
-
-
-
