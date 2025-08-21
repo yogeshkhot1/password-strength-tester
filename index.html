@@ -68,8 +68,8 @@
   </div>
 
   <div class="disclaimer">
-    ⚠️ <b>Disclaimer:</b> This is a static web application for password generation. <br><br>Passwords entered here are <b>never stored</b> or <b>exposed.</b><br>
-    Everything runs securely in your browser only.<br> <b><br>Don't forget your password.</b>
+    ⚠️ Disclaimer: This is a static web application for password generation. Passwords entered here are <b>never stored</b> or <b>exposed.</b><br>
+    Everything runs securely in your browser only. <b>Don't forget your password.</b>
   </div>
 
   <!-- Footer -->
@@ -90,7 +90,14 @@ const copyPw=document.getElementById('copyPw');
 const recentList=document.getElementById('recentList');
 
 let recentPasswords=[];
-let modifiedPasswords={}; // store forced scores for modified passwords
+let modifiedPasswords={};
+
+// Weak / common passwords blacklist
+const weakList = [
+  "password","password123","123456","12345678","123456789","12345","admin",
+  "root","letmein","qwerty","iloveyou","welcome","monkey","dragon","abc123",
+  "1q2w3e4r","default","zaq123","user","test"
+];
 
 function updateRecent(pwd){
   if(!pwd)return;
@@ -112,14 +119,28 @@ function generateStrong(){const sets={lo:'abcdefghijklmnopqrstuvwxyz',up:'ABCDEF
 function fillGenerated(){let candidate=generateStrong();pw.value=candidate;update();}
 function varietyCount(s){let c=0;if(/[a-z]/.test(s))c++;if(/[A-Z]/.test(s))c++;if(/\d/.test(s))c++;if(/[^a-zA-Z0-9]/.test(s))c++;return c;}
 
+// 🔑 Password Scoring
 function scorePassword(p){
-  if(!p)return 0;
-  // if it's a modified password, return its forced score
+  if(!p) return 0;
   if(modifiedPasswords[p]) return modifiedPasswords[p];
 
-  let score=0;const len=p.length;
-  score+=Math.min(50,len*2.5);
   const variety=varietyCount(p);
+  const lowerP=p.toLowerCase();
+
+  // 🚨 Weak list penalty
+  if(weakList.includes(lowerP)){
+    return 20; // fixed very weak score
+  }
+
+  // 🚨 Only one character type penalty
+  if(variety===1){
+    return Math.min(30, p.length); 
+  }
+
+  // Normal scoring
+  let score=0;
+  const len=p.length;
+  score+=Math.min(50,len*2.5);
   score+=variety*12;
   if(len>=16&&variety===4)score+=2;
   if(score>100)score=100;
@@ -154,8 +175,7 @@ function showModified(){
     mods.innerHTML="<i>Enter a password first</i>";return;
   }
   let lengths=[15,17,20];
-  lengths.sort(()=>Math.random()-0.5); // shuffle
-
+  lengths.sort(()=>Math.random()-0.5);
   for(let i=0;i<3;i++){
     let m=modifyPassword(val,lengths[i]);
     let forcedScore=Math.floor(Math.random()*10)+91; // 91–100
@@ -174,10 +194,3 @@ pw.addEventListener('input',()=>{pw.value=pw.value.replace(/\s+/g,"");update();}
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
