@@ -13,9 +13,10 @@
     .field input{flex:1;background:transparent;border:none;outline:none;color:#00ff6a;font-size:18px;font-family:'Share Tech Mono', monospace;letter-spacing:1px;}
     .toggle-btn, .copy-btn{cursor:pointer;font-size:18px;user-select:none;color:#0f0;transition:0.2s;}
     .toggle-btn:hover,.copy-btn:hover{text-shadow:0 0 10px #00ff6a;}
-    .btn-generate{margin-top:15px;background:#001a00;border:1px solid #00ff6a;color:#00ff6a;font-weight:bold;padding:10px 16px;border-radius:8px;cursor:pointer;font-family:'Share Tech Mono', monospace;transition:0.3s;box-shadow:0 0 12px #0f0 inset;}
+    .btn-row{display:flex;gap:10px;margin-top:15px;}
+    .btn-generate{flex:1;background:#001a00;border:1px solid #00ff6a;color:#00ff6a;font-weight:bold;padding:10px 16px;border-radius:8px;cursor:pointer;font-family:'Share Tech Mono', monospace;transition:0.3s;box-shadow:0 0 12px #0f0 inset;}
     .btn-generate:hover{background:#002b00;color:#fff;text-shadow:0 0 8px #0f0;}
-    .meter,.modifier,.recent{margin-top:25px;padding:20px;border:1px solid #0f0;border-radius:12px;text-align:center;box-shadow:0 0 15px #0f0 inset;background:#000;}
+    .meter,.recent{margin-top:25px;padding:20px;border:1px solid #0f0;border-radius:12px;text-align:center;box-shadow:0 0 15px #0f0 inset;background:#000;}
     .score{font-size:48px;font-weight:bold;color:#0f0;text-shadow:0 0 15px #00ff6a;}
     .bar{height:16px;background:#001100;border-radius:999px;overflow:hidden;margin-top:10px;border:1px solid #0f0;}
     .bar span{display:block;height:100%;width:0%;background:linear-gradient(90deg,red,orange,yellow,lime,cyan);transition:width .3s ease, background .3s ease;box-shadow:0 0 15px #00ff6a;}
@@ -43,7 +44,18 @@
     <span id="togglePw" class="toggle-btn">👁</span>
     <span id="copyPw" class="copy-btn">📋</span>
   </div>
-  <button class="btn-generate" onclick="fillGenerated()">🔑 Generate Strong Password</button>
+
+  <!-- Buttons Row -->
+  <div class="btn-row">
+    <button class="btn-generate" onclick="fillGenerated()">🔑 Generate Strong Password</button>
+    <button class="btn-generate" onclick="showModified()">⚡ Create Your Own Password</button>
+  </div>
+
+  <!-- Modified Passwords List -->
+  <div class="meter" id="mods" style="display:none;">
+    <h2>🔄 Your Modified Passwords</h2>
+    <div id="modsList"></div>
+  </div>
 
   <!-- Meter -->
   <div class="meter">
@@ -52,13 +64,6 @@
     <div class="label" id="label">Awaiting input...</div>
     <div class="tip" id="tip">Type a password to test its strength</div>
     <div class="bar"><span id="barFill"></span></div>
-  </div>
-
-  <!-- Modifier Section -->
-  <div class="modifier">
-    <h2>🔄 Create Your Own Password</h2>
-    <button class="btn-generate" onclick="showModified()">⚡ Click to Create </button>
-    <div id="mods"></div>
   </div>
 
   <!-- Recently Copied Section -->
@@ -88,6 +93,8 @@ const emoji=document.getElementById('emoji');
 const togglePw=document.getElementById('togglePw');
 const copyPw=document.getElementById('copyPw');
 const recentList=document.getElementById('recentList');
+const mods=document.getElementById("mods");
+const modsList=document.getElementById("modsList");
 
 let recentPasswords=[];
 let modifiedPasswords={};
@@ -115,11 +122,28 @@ function updateRecent(pwd){
 togglePw.addEventListener('click',()=>{if(pw.type==="password"){pw.type="text";togglePw.textContent="👁‍🗨";}else{pw.type="password";togglePw.textContent="👁";}});
 copyPw.addEventListener('click',()=>{if(pw.value){navigator.clipboard.writeText(pw.value);copyPw.textContent="✅";updateRecent(pw.value);setTimeout(()=>copyPw.textContent="📋",1500);}});
 
-function generateStrong(){const sets={lo:'abcdefghijklmnopqrstuvwxyz',up:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',num:'0123456789',sym:'!@#$%^&*()-_=+;:,.?/'};const pick=s=>s[Math.floor(Math.random()*s.length)];let out=[pick(sets.lo),pick(sets.up),pick(sets.num),pick(sets.sym)];const target=16+Math.floor(Math.random()*4);const pool=sets.lo+sets.up+sets.num+sets.sym;while(out.length<target)out.push(pick(pool));for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out.join('');}
-function fillGenerated(){let candidate=generateStrong();pw.value=candidate;update();}
-function varietyCount(s){let c=0;if(/[a-z]/.test(s))c++;if(/[A-Z]/.test(s))c++;if(/\d/.test(s))c++;if(/[^a-zA-Z0-9]/.test(s))c++;return c;}
+function generateStrong(){
+  const sets={lo:'abcdefghijklmnopqrstuvwxyz',up:'ABCDEFGHIJKLMNOPQRSTUVWXYZ',num:'0123456789',sym:'!@#$%^&*()-_=+;:,.?/'};
+  const pick=s=>s[Math.floor(Math.random()*s.length)];
+  let out=[pick(sets.lo),pick(sets.up),pick(sets.num),pick(sets.sym)];
+  const target=16+Math.floor(Math.random()*4);
+  const pool=sets.lo+sets.up+sets.num+sets.sym;
+  while(out.length<target)out.push(pick(pool));
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}
+  return out.join('');
+}
 
-// 🔑 Password Scoring
+function fillGenerated(){
+  let candidate=generateStrong();
+  pw.value=candidate;
+  modifiedPasswords = {}; // reset old modified ones
+  update();
+}
+
+function varietyCount(s){
+  let c=0;if(/[a-z]/.test(s))c++;if(/[A-Z]/.test(s))c++;if(/\d/.test(s))c++;if(/[^a-zA-Z0-9]/.test(s))c++;return c;
+}
+
 function scorePassword(p){
   if(!p) return 0;
   if(modifiedPasswords[p]) return modifiedPasswords[p];
@@ -127,17 +151,9 @@ function scorePassword(p){
   const variety=varietyCount(p);
   const lowerP=p.toLowerCase();
 
-  // 🚨 Weak list penalty
-  if(weakList.includes(lowerP)){
-    return 20; // fixed very weak score
-  }
+  if(weakList.includes(lowerP)) return 20; 
+  if(variety===1) return Math.min(30, p.length); 
 
-  // 🚨 Only one character type penalty
-  if(variety===1){
-    return Math.min(30, p.length); 
-  }
-
-  // Normal scoring
   let score=0;
   const len=p.length;
   score+=Math.min(50,len*2.5);
@@ -167,32 +183,29 @@ function modifyPassword(base,targetLength){
 
 function showModified(){
   const val=pw.value;
-  const mods=document.getElementById("mods");
-  mods.innerHTML="";
+  modsList.innerHTML="";
   if(!val){
     pw.focus();pw.scrollIntoView({behavior:"smooth",block:"center"});
     pwField.classList.add("shake");setTimeout(()=>pwField.classList.remove("shake"),500);
-    mods.innerHTML="<i>Enter a password first</i>";return;
+    mods.style.display="block";modsList.innerHTML="<i>Enter a password first</i>";return;
   }
   let lengths=[15,17,20];
   lengths.sort(()=>Math.random()-0.5);
   for(let i=0;i<3;i++){
     let m=modifyPassword(val,lengths[i]);
-    let forcedScore=Math.floor(Math.random()*10)+91; // 91–100
+    let forcedScore=Math.floor(Math.random()*10)+91;
     modifiedPasswords[m]=forcedScore;
     let div=document.createElement("div");
     div.className="option";
     div.innerHTML=`<span>${m}</span> 
       <span class="copy-var" onclick="navigator.clipboard.writeText('${m}'); updateRecent('${m}')">📋</span>`;
-    mods.appendChild(div);
+    modsList.appendChild(div);
   }
+  mods.style.display="block";
 }
 
-// block spaces
 pw.addEventListener("keydown",(e)=>{if(e.key===" ")e.preventDefault();});
 pw.addEventListener('input',()=>{pw.value=pw.value.replace(/\s+/g,"");update();});
 </script>
 </body>
 </html>
-
-
